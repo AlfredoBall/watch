@@ -180,3 +180,7 @@ Watch should remain:
 * semantically open-ended.
 
 > **The goal is useful ability to tell time from a comprehensible workflow topology.**
+
+## License
+
+MIT
