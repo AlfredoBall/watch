@@ -6,3 +6,5 @@ export { WorkflowFrameRun } from './WorkflowFrameRun'
 export * from './Vertex'
 export * from './WorkflowFrame'
 export * from './WatchTickContext'
+
+export * from "./time";
