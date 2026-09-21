@@ -4,8 +4,6 @@
 
 Watch is a geometric and temporal instrument. It is **not** a clock, workflow engine, cache manager, state machine, or visualization framework.
 
-The package is published as:
-
 ```text
 @alfredoball/watch
 ```
@@ -16,376 +14,126 @@ The package is published as:
 
 ```text
 geometry
-    ↓
+  ↓
 position + relationships
-    ↓
+  ↓
 workflow runs
-    ↓
-traversal / visitation
-    ↓
+  ↓
+traversal
+  ↓
 derived temporal information
-    ↓
+  ↓
 application interpretation
 ```
 
 Watch records structural and descriptive facts. Applications interpret them.
 
----
+## Workflow
 
-# Workflow
-
-A workflow represents a purposeful activity.
-
-```text
-Review
-
-├── compose
-├── revise
-└── submit
-```
-
-Workflow granularity belongs to the workflow model, not to Watch.
-
-For example, a consultation may itself be a workflow:
-
-```text
-Consultation
-
-├── intake
-├── discovery
-├── analysis
-└── conclusion
-```
-
-Or it may be one activity within another workflow.
-
-> **Watch models relationships between workflow structures; it does not prescribe their granularity.**
-
-A workflow progresses through `WorkflowFrame` values:
+A workflow represents purposeful activity and progresses through `WorkflowFrame` values.
 
 ```text
 F0 ── F1 ── F2 ── F3
 ```
 
-A `WorkflowFrameRun` represents an actual run of a workflow framework.
+A `WorkflowFrameRun` represents an actual run of a workflow framework, including its historical `story`, current `progress`, and `activeFrame`.
 
-The framework, its runs, its current frame, its progress, and its historical story remain distinct concepts.
+Workflow granularity belongs to the workflow model, not Watch. A workflow may contain other activities or itself be one activity within a larger workflow.
 
----
+## Geometry
 
-# Watch Geometry
-
-A `Watch` contains a bounded `Bundle`.
-
-The bundle contains one or more `Cable` objects. Each cable has:
+A `Watch` contains a bounded `Bundle` of one, two, or three `Cable` objects.
 
 ```text
 Cable
-
 ├── Core
 └── Strands
 ```
 
-Relationships between cables are represented by `Vertex` objects.
+A `Strand` represents a workflow position capable of containing one or more `WorkflowFrameRun` instances.
 
-The current implementation supports bundles containing **one, two, or three cables**.
+A `Vertex` represents a relationship between exactly two distinct strands.
+
+The supported topology is deliberately constrained:
 
 ```text
 1 cable
-
-2 cables
-    └── 1 vertex
-
-3 cables
-    └── 3 vertices
+2 cables ── 1 vertex
+3 cables ── 3 vertices
 ```
 
-The geometry is intentionally bounded. The model does not expose arbitrary cable counts or arbitrary graph construction.
+`Bundle` validates these relationships during construction rather than allowing arbitrary graph state.
 
-## Core
+The cable `core` is a privileged structural strand. Coaxial strands are evaluated during a tick; the core is not independently ticked by `Cable.tick()`.
 
-Each cable has one `core` strand.
+## Ticking
 
-The core is a privileged geometric position within the cable. It is still a workflow strand; it is not a different workflow type.
-
-The core may represent a long-lived workflow such as account establishment and maintenance while other workflow runs exist alongside it.
-
-For example:
-
-```text
-Account
-
-├── establishment
-├── maintenance
-└── lifecycle
-```
-
-while shorter workflows may occupy other strands:
-
-```text
-Purchase
-Consultation
-Order
-Review
-```
-
-The model does not require those workflows to have the same lifetime.
-
-## Strands
-
-A `Strand` represents a workflow position capable of containing one or more `WorkflowFrameRun` instances.
-
-Different strands can therefore represent different workflow structures, while multiple runs of the same workflow framework can coexist within a strand.
-
-A cable's coaxial strands are ticked concurrently.
-
-A cable's core is structural and is not itself ticked by `Cable.tick()`.
-
-## Vertices
-
-A `Vertex` represents a relationship between two strands.
-
-Each vertex contains exactly two distinct strands:
-
-```text
-Vertex
-
-Strand ───── Strand
-```
-
-For a two-cable bundle, the vertex connects the coaxial strand of the first cable with the coaxial strand of the second cable.
-
-For a three-cable bundle, the topology contains three vertices connecting the three cables.
-
-The exact topology is validated when the `Bundle` is constructed.
-
-Invalid relationships are rejected rather than being left for application code to interpret.
-
-> **Watch validates topology at construction time rather than allowing arbitrary graph state.**
-
----
-
-# Bundle Topology
-
-`Bundle` establishes and validates the supported cable topology.
-
-A one-cable bundle may contain zero or more coaxial strands:
-
-```text
-Bundle
-
-└── Cable
-    ├── Core
-    └── Strands...
-```
-
-A two-cable bundle requires one coaxial strand on each cable and one connecting vertex:
-
-```text
-Cable 1                  Cable 2
-
-  Core                     Core
-    │                        │
- Strand 1 ───── Vertex ───── Strand 2
-```
-
-A three-cable bundle extends this topology with a third cable containing two coaxial strands and two additional vertices.
-
-The topology is deliberately constrained so that the relationships represented by a `Bundle` remain structurally meaningful.
-
----
-
-# Ticking
-
-A `Watch` is evaluated through a `WatchTickContext`.
+A Watch is evaluated against a `WatchTickContext`:
 
 ```ts
 type WatchTickContext<TState extends object> = {
     readonly timestamp: number;
-
     readonly url: string;
-
     readonly mutation: {
         readonly operationName: string;
         readonly payload: unknown;
     } | null;
-
     readonly disposition: TState;
 };
 ```
 
-The context represents the application event against which the Watch is evaluated.
+The context carries application events and state without prescribing their meaning.
 
-A tick can therefore carry:
-
-* a timestamp;
-* the current URL;
-* an optional mutation;
-* application-defined disposition state.
-
-Watch does not prescribe what those values mean.
-
-## Concurrent Evaluation
-
-A bundle ticks its cables concurrently.
-
-Each cable evaluates its coaxial strands concurrently.
-
-Each strand is responsible for evaluating its workflow runs.
+Evaluation proceeds concurrently through the topology:
 
 ```text
 Watch
-  │
-  ▼
+  ↓
 Bundle
-  │
   ├── Cable
-  │     ├── Strand
-  │     │     ├── WorkflowFrameRun
-  │     │     └── WorkflowFrameRun
-  │     └── Strand
-  │
+  │    ├── Strand → WorkflowFrameRun
+  │    └── Strand → WorkflowFrameRun
   ├── Cable
-  │     └── Strand
-  │
+  │    └── Strand → WorkflowFrameRun
   └── Cable
-        └── Strand
+       └── Strand → WorkflowFrameRun
 ```
 
-This establishes a consistent evaluation boundary without turning Watch into a workflow execution engine.
+Watch observes and evaluates workflow structure; it does not execute the workflows themselves.
 
----
+## Contextual Time
 
-# WorkflowFrameRun
+Watch does not contain a clock abstraction. Temporal information is derived from workflow state and topology.
 
-`WorkflowFrameRun` represents an actual execution and history instance of a workflow framework.
-
-A run establishes a story:
-
-```text
-WorkflowFrameRun
-
-story
-  │
-  ├── Frame
-  ├── Frame
-  ├── Frame
-  └── Frame
-
-progress
-
-activeFrame
-```
-
-The story is established when the run is loaded.
-
-`progress` and `activeFrame` are established during a Watch tick.
-
-The distinction is intentional:
-
-* **story** represents the run's longitudinal frame history;
-* **progress** represents the run's current evaluated progress;
-* **activeFrame** represents the frame currently active for contextual reporting.
-
-A `WorkflowFrame` contains a name and application-defined state:
+The package exposes time-oriented reports through the `/time` subpath:
 
 ```ts
-type WorkflowFrame<TState extends object = object> = {
-    readonly name: string;
-    state: TState;
-};
+import {
+    allWorkflowsActiveFrame,
+} from "@alfredoball/watch/time";
 ```
-
-Watch does not prescribe the meaning of a frame's state.
-
----
-
-# Contextual Time
-
-Watch does not contain a clock abstraction.
-
-Instead, temporal information can be derived from the topology and the state of its workflow runs.
-
-The package exposes:
-
-```ts
-allWorkflowsActiveFrame(watch)
-```
-
-This produces the active frames of workflow runs represented by the Watch.
-
-Conceptually:
-
-```text
-Watch
-  │
-  ├── Cable
-  │     ├── Core
-  │     │     └── WorkflowFrameRun
-  │     │           └── activeFrame
-  │     │
-  │     └── Strand
-  │           └── WorkflowFrameRun
-  │                 └── activeFrame
-  │
-  └── ...
-          ↓
-allWorkflowsActiveFrame()
-          ↓
-current workflow context
-```
-
-This is a **derived report**, not another piece of Watch state.
-
-Such reports can provide the structural basis for questions such as:
-
-* How recently was this context established?
-* How much traversal has occurred since it?
-* Did the user return to a previous workflow context?
-* Did they return through the same topology?
-* How much contextual distance has accumulated?
-* Should previously established context be reconsidered?
-
-Those meanings belong to applications and higher-level models.
-
-> **Watch records enough structure for temporal meaning to be derived later; it does not encode those meanings prematurely.**
-
----
-
-# Navigation
-
-Navigation is not synonymous with changing URLs.
-
-A URL is one input to a Watch tick. Watch can instead represent navigation as traversal through workflow topology.
-
-Two visits to the same URL do not necessarily represent the same contextual state.
 
 For example:
 
-```text
-Workflow A
-    │
-    ├── Frame 1
-    │
-    └── Frame 2
-          │
-          ▼
-Workflow B
-    │
-    └── Frame 1
+```ts
+allWorkflowsActiveFrame(watch);
 ```
 
-Returning to the same route does not necessarily mean returning to the same workflow context.
+returns the active frames represented by the Watch.
 
-The topology and workflow runs provide the structural information needed to distinguish those situations.
+This is a **derived report**, not additional Watch state. Applications can use such structural information to determine contextual distance, revisitation, progression, or other temporal meanings.
 
-> **A route is an input to Watch, not Watch state.**
+> **Watch records enough structure for temporal meaning to be derived later; it does not encode those meanings prematurely.**
 
----
+## Navigation
 
-# Package API
+A URL is an input to Watch, not Watch state.
 
-The public API is exposed from the package root:
+Returning to the same URL does not necessarily represent returning to the same workflow context. Workflow topology and frame history provide the structural information needed to distinguish those cases.
+
+## Public API
+
+Core types are exported from the package root:
 
 ```ts
 import {
@@ -397,33 +145,20 @@ import {
     WorkflowFrame,
     WorkflowFrameRun,
     WatchTickContext,
-    allWorkflowsActiveFrame,
 } from "@alfredoball/watch";
 ```
 
-Internal implementation is organized around the same model:
+Time-oriented reports are exported through:
 
-```text
-src/
-
-├── Bundle.ts
-├── Cable.ts
-├── Strand.ts
-├── Vertex.ts
-├── Watch.ts
-├── WatchTickContext.ts
-├── WorkflowFrame.ts
-├── WorkflowFrameRun.ts
-└── time/
-    ├── allWorkflowsActiveFrame.ts
-    └── index.ts
+```ts
+import {
+    allWorkflowsActiveFrame,
+} from "@alfredoball/watch/time";
 ```
 
-Time reports are re-exported through the package root so consumers depend on the public API rather than internal module paths.
+The `/time` path is a public package export, not an import from the package's internal `src` structure.
 
----
-
-# Installation
+## Installation
 
 ```bash
 npm install @alfredoball/watch
@@ -431,25 +166,17 @@ npm install @alfredoball/watch
 
 The package includes compiled JavaScript and TypeScript declarations.
 
----
-
-# Design Invariant
+## Design Invariant
 
 > **Record enough structure that meaning can be derived later; do not encode meanings prematurely.**
 
 Watch should remain:
 
-* universal;
 * framework-independent;
 * geometrically opinionated;
-* topologically valid;
-* tightly constrained;
+* topologically constrained;
 * traversal-aware;
 * capable of deriving contextual information;
 * semantically open-ended.
 
-The goal is not maximum geometric complexity.
-
-The topology is deliberately bounded so that the model remains comprehensible and useful.
-
-> **The goal is maximum useful ability to tell time from a comprehensible workflow topology.**
+> **The goal is useful ability to tell time from a comprehensible workflow topology.**
