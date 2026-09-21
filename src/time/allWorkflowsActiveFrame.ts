@@ -1,5 +1,5 @@
-import type { Watch } from "../Watch";
-import type { WorkflowFrame } from "../WorkflowFrame";
+import type { Watch } from "../Watch.ts";
+import type { WorkflowFrame } from "../WorkflowFrame.ts";
 
 export default function allWorkflowsActiveFrame<
   TState extends object,

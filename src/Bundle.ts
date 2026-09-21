@@ -1,8 +1,8 @@
-import { Cable } from "./Cable";
-import type { Strand } from "./Strand";
-import type { Vertex } from "./Vertex";
-import type { WatchTickContext } from "./WatchTickContext";
-import type { WorkflowFrameRun } from "./WorkflowFrameRun";
+import { Cable } from "./Cable.ts";
+import type { Strand } from "./Strand.ts";
+import type { Vertex } from "./Vertex.ts";
+import type { WatchTickContext } from "./WatchTickContext.ts";
+import type { WorkflowFrameRun } from "./WorkflowFrameRun.ts";
 
 type FirstCable<TState extends object> = {
     core: Strand<WorkflowFrameRun<TState>, TState>;

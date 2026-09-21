@@ -1,5 +1,5 @@
-import type { WorkflowFrameRun } from "./WorkflowFrameRun";
-import type { WatchTickContext } from "./WatchTickContext";
+import type { WorkflowFrameRun } from "./WorkflowFrameRun.ts";
+import type { WatchTickContext } from "./WatchTickContext.ts";
 
 export abstract class Strand<
   TRun extends WorkflowFrameRun<TState>,

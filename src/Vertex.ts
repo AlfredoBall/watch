@@ -1,5 +1,5 @@
-import type { Strand } from "./Strand";
-import type { WorkflowFrameRun } from "./WorkflowFrameRun";
+import type { Strand } from "./Strand.ts";
+import type { WorkflowFrameRun } from "./WorkflowFrameRun.ts";
 
 export type Vertex<TState extends object> = {
   readonly strands: readonly [

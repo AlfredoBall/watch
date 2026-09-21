@@ -1,3 +1,3 @@
 export {
   default as allWorkflowsActiveFrame,
-} from "./allWorkflowsActiveFrame";
+} from "./allWorkflowsActiveFrame.ts";

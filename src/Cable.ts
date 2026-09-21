@@ -1,6 +1,6 @@
-import type { Strand } from "./Strand";
-import type { WatchTickContext } from "./WatchTickContext";
-import type { WorkflowFrameRun } from "./WorkflowFrameRun";
+import type { Strand } from "./Strand.ts";
+import type { WatchTickContext } from "./WatchTickContext.ts";
+import type { WorkflowFrameRun } from "./WorkflowFrameRun.ts";
 
 export class Cable<TState extends object> {
     readonly core: Strand<WorkflowFrameRun<TState>, TState>;

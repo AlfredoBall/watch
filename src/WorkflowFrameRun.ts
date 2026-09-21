@@ -1,5 +1,5 @@
-import type { WorkflowFrame } from "./WorkflowFrame";
-import type { WatchTickContext } from "./WatchTickContext";
+import type { WorkflowFrame } from "./WorkflowFrame.ts";
+import type { WatchTickContext } from "./WatchTickContext.ts";
 
 export abstract class WorkflowFrameRun<
   TState extends object,

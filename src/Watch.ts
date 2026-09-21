@@ -1,5 +1,5 @@
-import type { Bundle } from "./Bundle";
-import type { WatchTickContext } from "./WatchTickContext";
+import type { Bundle } from "./Bundle.ts";
+import type { WatchTickContext } from "./WatchTickContext.ts";
 
 export abstract class Watch<T extends object> {
   readonly bundle: Bundle<T>;
