@@ -1,4 +1,4 @@
-# Watch
+# @alfredoball/watch
 
 **Watch** is a framework-independent TypeScript library for representing **workflow topology and deriving contextual information from traversal through that topology**.
 
